@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "openai": "^7.43.0",
+    "oxlint-tsgolint": "^7.0.2005",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
@@ -21,5 +23,8 @@
     "oxlint": "^1.88.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.4"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
