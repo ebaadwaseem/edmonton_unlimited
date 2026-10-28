@@ -12,7 +12,10 @@
     "db:migrate": "node --import tsx scripts/migrate.ts",
     "db:import": "node --import tsx scripts/import-documents.ts",
     "db:index": "node --import tsx scripts/index-document.ts",
-    "test": "node --import tsx --test tests/*.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "db:attributions": "node --import tsx scripts/import-verified-attributions.ts",
+    "test:review": "REVIEW_INTEGRATION=1 node --import tsx --test tests/review-integration.test.ts",
+    "demo:assign": "node --import tsx scripts/assign-demo-application.ts"
   },
   "dependencies": {
     "dotenv": "^18.0.9",

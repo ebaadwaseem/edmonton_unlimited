@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "../db.ts";
 import { parseId } from "../http.ts";
+import { AGENT_CONFIG_VERSION } from "../agent/config.ts";
 import { AgentSessionStateError, runAgentTurn } from "../agent/run-turn.ts";
 
 // Leave pool capacity available for tools while chat requests hold advisory locks.
@@ -37,15 +38,24 @@ router.post("/api/applications/:id/messages", async (request, response) => {
     if (!locked) {
       response.status(409).json({ error: "This application already has an agent request in progress." }); return;
     }
-    const application = await client.query("SELECT agent_session_id FROM applications WHERE id = $1", [id]);
+    const application = await client.query("SELECT agent_session_id, agent_config_version FROM applications WHERE id = $1", [id]);
     if (!application.rows.length) {
       response.status(404).json({ error: "Application not found." }); return;
+    }
+    const needsUpgrade = application.rows[0].agent_session_id && application.rows[0].agent_config_version !== AGENT_CONFIG_VERSION;
+    let context: string | undefined;
+    if (needsUpgrade) {
+      const history = await client.query("SELECT role, content FROM conversation_messages WHERE application_id = $1 ORDER BY id", [id]);
+      context = JSON.stringify(history.rows);
+      if (Buffer.byteLength(context, "utf8") > 500_000) {
+        response.status(409).json({ error: "This saved conversation is too large to upgrade automatically. Start a new application for the new Part 1 tools." }); return;
+      }
     }
     controller.signal.throwIfAborted();
     await client.query(`INSERT INTO conversation_messages (application_id, role, content) VALUES ($1, 'user', $2)`, [id, message.trim()]);
     messageSaved = true;
     const { answer, sessionId } = await runAgentTurn({
-      applicationId: id, sessionId: application.rows[0].agent_session_id, message: message.trim(), signal: controller.signal,
+      applicationId: id, sessionId: needsUpgrade ? null : application.rows[0].agent_session_id, context, message: message.trim(), signal: controller.signal,
     });
     await client.query(`INSERT INTO conversation_messages (application_id, role, content, agent_session_id)
       VALUES ($1, 'assistant', $2, $3)`, [id, answer, sessionId]);

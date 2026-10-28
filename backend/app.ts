@@ -5,12 +5,20 @@ import { router as documents } from "./routes/documents.ts";
 import { router as suggestions } from "./routes/suggestions.ts";
 import { router as messages } from "./routes/messages.ts";
 import { router as preview } from "./routes/preview.ts";
+import { router as attributions } from "./routes/attributions.ts";
+import { router as reviews } from "./routes/reviews.ts";
+import { createDemoAccess } from "./demo-access.ts";
+import type { DemoAccessConfig } from "./demo-access.ts";
 
-export function createApp() {
+export function createApp(options: { access?: DemoAccessConfig } = {}) {
+  if (process.env.NODE_ENV === "production") throw new Error("The local demo access mechanism is not suitable for production. Configure production identity and authorization before deployment.");
   const app = express();
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_request, response) => { response.json({ status: "ok" }); });
-  app.use(applications, documents, suggestions, messages, preview);
+  const access = createDemoAccess(options.access);
+  app.use(access.authenticate, access.router);
+  app.use((request, response, next) => request.path.toLowerCase().startsWith("/api/") ? access.authorize(request, response, next) : next());
+  app.use(applications, documents, suggestions, messages, preview, attributions, reviews);
   app.use("/api", (_request, response) => { response.status(404).json({ error: "API route not found." }); });
   // Keep error handling after every route so Express 5 async errors reach it.
   app.use((error: unknown, _request: express.Request, response: express.Response, next: express.NextFunction) => {

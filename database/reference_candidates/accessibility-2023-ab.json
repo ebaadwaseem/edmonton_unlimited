@@ -1,0 +1,281 @@
+{
+  "description": "Partial source-extracted accessibility examples, not complete article coverage. No authorized source or compatibility review performed. Source excerpts retain identifiers/grouping and are normalized for whitespace. Objective/functional statement_text stores the printed pair, not an invented definition.",
+  "documents": [
+    {
+      "id": 5,
+      "sha256": "3d45376d6c71d54b7f1797084d0828c250b20ab9b380f424f1aab8cfc9a39827",
+      "edition": "2023 Alberta Edition, second printing (April 2026 revisions and errata)",
+      "jurisdiction": "Alberta",
+      "role": "code"
+    },
+    {
+      "id": 11,
+      "sha256": "a75ef52eff6f060a4735010c0435ee966b48b1a1d11cf22e1610f557096ba4cf",
+      "edition": "NBC 2020, Intent Statements, first release 2025",
+      "jurisdiction": "Canada (national)",
+      "role": "intent_supplement"
+    }
+  ],
+  "provisions": [
+    {
+      "document_id": 5,
+      "reference": "3.8.3.5.(1)(b)",
+      "scope": "",
+      "pdf_page_start": 307,
+      "pdf_page_end": 307,
+      "attributions": [
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OA1"
+          ],
+          "functional_ids": [
+            "F73"
+          ],
+          "attribution_group": "[F73-OA1]",
+          "statement_text": "[F73-OA1]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.5.(1)(b), 3.8.3.5.(1)(e)",
+          "source_scope": "",
+          "source_pdf_page_start": 353,
+          "source_pdf_page_end": 353,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.5.(1)(b), 3.8.3.5.(1)(e) [F73-OA1]"
+        },
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OS3.1"
+          ],
+          "functional_ids": [
+            "F30"
+          ],
+          "attribution_group": "[F30-OS3.1]",
+          "statement_text": "[F30-OS3.1]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.5.(1)(b), 3.8.3.5.(1)(e)",
+          "source_scope": "",
+          "source_pdf_page_start": 353,
+          "source_pdf_page_end": 353,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.5.(1)(b), 3.8.3.5.(1)(e) [F30-OS3.1]"
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F73-OA1]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To limit the probability that persons using a wheelchair or other assistive mobility device will have difficulty using a ramp without the assistance of another person.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.5.(1)(b), 3.8.3.5.(1)(e)",
+          "source_scope": "",
+          "source_pdf_page_start": 740,
+          "source_pdf_page_end": 740,
+          "source_excerpt": "3.8.3.5.(1)(b), 3.8.3.5.(1)(e) [F73-OA1] \nIntent 1. To limit the probability that persons using a wheelchair or other assistive mobility device will have difficulty using a ramp without the assistance of another person."
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F30-OS3.1]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To limit the probability that persons using a wheelchair or other assistive mobility device will be unable to control the movement of the wheelchair or device, which could lead to harm to the person or persons nearby.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.5.(1)(b), 3.8.3.5.(1)(e)",
+          "source_scope": "",
+          "source_pdf_page_start": 741,
+          "source_pdf_page_end": 741,
+          "source_excerpt": "3.8.3.5.(1)(b), 3.8.3.5.(1)(e) [F30-OS3.1] \nIntent 1. To limit the probability that persons using a wheelchair or other assistive mobility device will be unable to control the movement of the wheelchair or device, which could lead to harm to the person or persons nearby."
+        }
+      ]
+    },
+    {
+      "document_id": 5,
+      "reference": "3.8.3.20.(1)",
+      "scope": "",
+      "pdf_page_start": 316,
+      "pdf_page_end": 316,
+      "attributions": [
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OA2"
+          ],
+          "functional_ids": [
+            "F74"
+          ],
+          "attribution_group": "[F74-OA2]",
+          "statement_text": "[F74-OA2]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.20.(1)",
+          "source_scope": "",
+          "source_pdf_page_start": 354,
+          "source_pdf_page_end": 354,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.20.(1) [F74-OA2]"
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F74-OA2]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To limit the probability that persons using a wheelchair or other assistive mobility device will not be able to be served at a service counter or to use a work surface or counter independently.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.20.(1)",
+          "source_scope": "",
+          "source_pdf_page_start": 761,
+          "source_pdf_page_end": 761,
+          "source_excerpt": "3.8.3.20.(1) [F74-OA2] \nIntent 1. To limit the probability that persons using a wheelchair or other assistive mobility device will not be able to be served at a service counter or to use a work surface or counter independently."
+        }
+      ]
+    },
+    {
+      "document_id": 5,
+      "reference": "3.8.3.2.(3)(a)",
+      "scope": "",
+      "pdf_page_start": 306,
+      "pdf_page_end": 306,
+      "attributions": [
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OS3.1"
+          ],
+          "functional_ids": [
+            "F30"
+          ],
+          "attribution_group": "[F30-OS3.1]",
+          "statement_text": "[F30-OS3.1]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.2.(3)(a), 3.8.3.2.(3)(b)",
+          "source_scope": "",
+          "source_pdf_page_start": 352,
+          "source_pdf_page_end": 352,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.2.(3)(a), 3.8.3.2.(3)(b) [F30-OS3.1]"
+        },
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OA1"
+          ],
+          "functional_ids": [
+            "F73"
+          ],
+          "attribution_group": "[F73-OA1]",
+          "statement_text": "[F73-OA1]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.2.(3)(a), 3.8.3.2.(3)(b)",
+          "source_scope": "",
+          "source_pdf_page_start": 352,
+          "source_pdf_page_end": 352,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.2.(3)(a), 3.8.3.2.(3)(b) [F73-OA1]"
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F30-OS3.1]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To limit the probability that a wheelchair or other assistive mobility device used by a person will be trapped in a walking surface, which could lead to the loss of balance of the person, which could lead to harm to the person or persons nearby.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.2.(3)(a), 3.8.3.2.(3)(b)",
+          "source_scope": "",
+          "source_pdf_page_start": 736,
+          "source_pdf_page_end": 737,
+          "source_excerpt": "3.8.3.2.(3)(a), 3.8.3.2.(3)(b) [F30-OS3.1] \nIntent 1. To limit the probability that a wheelchair or other assistive mobility device used by a person will be trapped in a walking surface, which could lead to the loss of balance of the person, which could lead to harm to the person or persons nearby."
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F73-OA1]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To limit the probability that a wheelchair or other assistive mobility device used by a person will be trapped in a walking surface, which could impede the person's ability to circulate.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.2.(3)(a), 3.8.3.2.(3)(b)",
+          "source_scope": "",
+          "source_pdf_page_start": 737,
+          "source_pdf_page_end": 737,
+          "source_excerpt": "3.8.3.2.(3)(a), 3.8.3.2.(3)(b) [F73-OA1] \nIntent 1. To limit the probability that a wheelchair or other assistive mobility device used by a person will be trapped in a walking surface, which could impede the person's ability to circulate."
+        }
+      ]
+    },
+    {
+      "document_id": 5,
+      "reference": "3.8.3.6.(2)",
+      "scope": "",
+      "pdf_page_start": 308,
+      "pdf_page_end": 308,
+      "attributions": [
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OA1"
+          ],
+          "functional_ids": [
+            "F73"
+          ],
+          "attribution_group": "[F73-OA1]",
+          "statement_text": "[F73-OA1]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.6.(2)",
+          "source_scope": "",
+          "source_pdf_page_start": 353,
+          "source_pdf_page_end": 353,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.6.(2) [F73-OA1]"
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F73-OA1]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To exempt doorways from the minimum width requirements stated in Sentence 3.8.3.2.(1) and permit a lesser minimum width, on the basis that doorways comprise a small portion of a pathway. This is to limit the probability that persons using a wheelchair or other assistive mobility device will not be able to circulate within a building independently.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.6.(2)",
+          "source_scope": "",
+          "source_pdf_page_start": 743,
+          "source_pdf_page_end": 743,
+          "source_excerpt": "3.8.3.6.(2) [F73-OA1] \nIntent 1. To exempt doorways from the minimum width requirements stated in Sentence 3.8.3.2.(1) and permit a lesser minimum width, on the basis that doorways comprise a small portion of a pathway. This is to limit the probability that persons using a wheelchair or other assistive mobility device will not be able to circulate within a building independently."
+        }
+      ]
+    },
+    {
+      "document_id": 5,
+      "reference": "3.8.3.13.(1)(g)",
+      "scope": "Applies to the requirement for a coat hook.",
+      "pdf_page_start": 312,
+      "pdf_page_end": 313,
+      "attributions": [
+        {
+          "kind": "objective_functional",
+          "objective_ids": [
+            "OS3.1"
+          ],
+          "functional_ids": [
+            "F30"
+          ],
+          "attribution_group": "[F30-OS3.1]",
+          "statement_text": "[F30-OS3.1]",
+          "source_document_id": 5,
+          "source_reference": "3.8.3.13.(1)(g)",
+          "source_scope": "Applies to the requirement for a coat hook.",
+          "source_pdf_page_start": 353,
+          "source_pdf_page_end": 353,
+          "source_excerpt": "Table 3.10.1.1.: 3.8.3.13.(1)(g) [F30-OS3.1] Applies to the requirement for a coat hook."
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F30-OS3.1]",
+          "statement_label": "Intent 1",
+          "statement_text": "Intent 1. To limit the probability that a coat hook will project excessively into the stall or enclosure space, which could lead to persons hitting themselves on the coat hook, which could lead to harm to the person.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.13.(1)(g)",
+          "source_scope": "Applies to the requirement for a coat hook.",
+          "source_pdf_page_start": 753,
+          "source_pdf_page_end": 754,
+          "source_excerpt": "3.8.3.13.(1)(g) [F30-OS3.1] Applies to the requirement for a coat hook.\nIntent 1. To limit the probability that a coat hook will project excessively into the stall or enclosure space, which could lead to persons hitting themselves on the coat hook, which could lead to harm to the person."
+        },
+        {
+          "kind": "intent",
+          "attribution_group": "[F30-OS3.1]",
+          "statement_label": "Intent 2",
+          "statement_text": "Intent 2. To expand the application of Clause 3.8.3.12.(1)(h) to universal washrooms.",
+          "source_document_id": 11,
+          "source_reference": "3.8.3.13.(1)(g)",
+          "source_scope": "Applies to the requirement for a coat hook.",
+          "source_pdf_page_start": 753,
+          "source_pdf_page_end": 754,
+          "source_excerpt": "3.8.3.13.(1)(g) [F30-OS3.1] Applies to the requirement for a coat hook.\nIntent 2. To expand the application of Clause 3.8.3.12.(1)(h) to universal washrooms."
+        }
+      ]
+    }
+  ]
+}

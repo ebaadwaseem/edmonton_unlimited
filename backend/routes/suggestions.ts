@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db } from "../db.ts";
 import { parseId } from "../http.ts";
-import { FORM_FIELD_KEYS } from "../../shared/form-fields.ts";
+import { acceptSuggestedValue } from "../suggestion-values.ts";
+import { createPreview, PdfValidationError } from "../template.ts";
 
 export const router = Router();
 router.get(
@@ -19,7 +20,7 @@ router.get(
 
             const result = await db.query(
                 `
-    SELECT id, field_key, suggested_value, explanation, status, created_at
+    SELECT id, field_key, suggested_value, explanation, metadata, status, created_at
     FROM form_suggestions
     WHERE application_id = $1
     ORDER BY id
@@ -89,56 +90,25 @@ router.post(
                 return;
             }
 
-            // The CTE updates the suggestion and form together in one
-            // PostgreSQL statement.
-            const result = await db.query(
-                `
-    WITH accepted AS (
-      UPDATE form_suggestions
-      SET status = 'accepted'
-      WHERE id = $1
-        AND application_id = $2
-        AND status = 'pending'
-        AND field_key = ANY($3::text[])
-      RETURNING *
-    ),
-    updated_application AS (
-      UPDATE applications AS a
-      SET form_data = jsonb_set(
-            a.form_data,
-            ARRAY[split_part(s.field_key, '.', 1)],
-            COALESCE(
-              a.form_data -> split_part(s.field_key, '.', 1),
-              '{}'::jsonb
-            ) || jsonb_build_object(
-              split_part(s.field_key, '.', 2),
-              s.suggested_value
-            ),
-            true
-          ),
-          updated_at = NOW()
-      FROM accepted AS s
-      WHERE a.id = s.application_id
-      RETURNING a.id, a.form_data, a.updated_at
-    )
-    SELECT
-      row_to_json(accepted) AS suggestion,
-      row_to_json(updated_application) AS application
-    FROM accepted
-    JOIN updated_application
-      ON updated_application.id = accepted.application_id
-    `,
-                [suggestionId, applicationId, FORM_FIELD_KEYS]
-            );
-
-            if (result.rows.length === 0) {
-                response.status(404).json({
-                    error: "Pending suggestion not found or field is unsupported.",
-                });
-                return;
-            }
-
-            response.json(result.rows[0]);
+            const client = await db.connect();
+            try {
+                await client.query("BEGIN");
+                const application = await client.query("SELECT id, form_data FROM applications WHERE id = $1 FOR UPDATE", [applicationId]);
+                const suggestion = await client.query("SELECT * FROM form_suggestions WHERE id = $1 AND application_id = $2 AND status = 'pending' FOR UPDATE", [suggestionId, applicationId]);
+                if (!application.rows.length || !suggestion.rows.length) {
+                    await client.query("ROLLBACK");
+                    response.status(404).json({ error: "Pending suggestion not found." }); return;
+                }
+                const formData = await acceptSuggestedValue(application.rows[0].form_data, suggestion.rows[0]);
+                await createPreview(formData); // Reject overflow before saving any part of the suggestion.
+                const updated = await client.query("UPDATE applications SET form_data = $1::jsonb, updated_at = NOW() WHERE id = $2 RETURNING id, form_data, updated_at", [JSON.stringify(formData), applicationId]);
+                const accepted = await client.query("UPDATE form_suggestions SET status = 'accepted' WHERE id = $1 RETURNING *", [suggestionId]);
+                await client.query("COMMIT");
+                response.json({ suggestion: accepted.rows[0], application: updated.rows[0] });
+            } catch (error) {
+                await client.query("ROLLBACK");
+                response.status(error instanceof PdfValidationError ? 422 : 409).json({ error: error instanceof Error ? error.message : "Could not accept suggestion." });
+            } finally { client.release(); }
         } catch (error) {
             console.error("Could not review suggestion:", error);
 

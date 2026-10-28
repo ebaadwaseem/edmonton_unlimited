@@ -1,6 +1,7 @@
 import { PDFDocument } from "pdf-lib";
 import { db } from "../db.ts";
-import { isFormFieldKey } from "../../shared/form-fields.ts";
+import { AGENT_FIELD_KEYS, isFormFieldKey, validateFieldValue } from "../../shared/form-fields.ts";
+import { attributionFingerprint, inspectAttributions, lookupVerifiedAttributions } from "../attributions.ts";
 import { renderPdfPage } from "./render-page.ts";
 
 type ToolOutput = string | Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string }>;
@@ -38,6 +39,27 @@ export function createToolHandlers(applicationId: number, signal?: AbortSignal) 
     ];
   };
 
+  async function saveSuggestion(fieldKey: string, value: string, explanation: string, metadata: object = {}) {
+    signal?.throwIfAborted();
+    const client = await db.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT id FROM applications WHERE id = $1 FOR UPDATE", [applicationId]);
+      await client.query("UPDATE form_suggestions SET status = 'rejected' WHERE application_id = $1 AND field_key = $2 AND status = 'pending'", [applicationId, fieldKey]);
+      const result = await client.query(`INSERT INTO form_suggestions (application_id, field_key, suggested_value, explanation, metadata)
+        VALUES ($1, $2, $3, $4, $5::jsonb) RETURNING id, field_key, suggested_value, explanation, metadata, status`,
+        [applicationId, fieldKey, value, explanation, JSON.stringify(metadata)]);
+      signal?.throwIfAborted();
+      await client.query("COMMIT"); return JSON.stringify(result.rows[0]);
+    } catch (error) { await client.query("ROLLBACK"); throw error; }
+    finally { client.release(); }
+  }
+  function rowNumber(value: unknown) {
+    const row = positiveInteger(value);
+    if (row > 5) throw new Error("Part 1 has five rows. Review or replace an existing row; additional rows cannot be silently dropped.");
+    return row;
+  }
+
   const handlers: Record<string, (args: Record<string, unknown>) => Promise<ToolOutput>> = {
     async search_code(args) {
       const search = text(args.query, 200);
@@ -71,28 +93,48 @@ export function createToolHandlers(applicationId: number, signal?: AbortSignal) 
     },
     view_document_page: (args) => viewPage(args, false),
     view_application_page: (args) => viewPage(args, true),
+    async get_application_draft() {
+      const result = await db.query("SELECT form_data FROM applications WHERE id = $1", [applicationId]);
+      return JSON.stringify(result.rows[0]?.form_data ?? {});
+    },
+    async lookup_code_attributions(args) {
+      const documentId = positiveInteger(args.document_id);
+      const reference = text(args.article_number, 100);
+      const scope = typeof args.scope === "string" ? args.scope : "";
+      const report = await inspectAttributions(documentId, reference, scope);
+      const mapping = report.verified ? await lookupVerifiedAttributions(documentId, reference, scope) : null;
+      return JSON.stringify({ ...report, mapping, message: "Candidates are not verified mappings. Select an exact reference and scope. Cross-edition intent requires explicit compatibility review." });
+    },
+    async propose_code_article(args) {
+      const row = rowNumber(args.row);
+      const documentId = positiveInteger(args.document_id);
+      const article = text(args.article_number, 100);
+      const scope = typeof args.scope === "string" ? args.scope : "";
+      const rank = rowNumber(args.rank);
+      const relevance = text(args.relevance, 3000);
+      const benchmark = text(args.benchmark, 1500);
+      const mapping = await lookupVerifiedAttributions(documentId, article, scope);
+      if (!mapping) throw new Error("No complete verified mapping exists. Do not invent attribution values. Explain the missing source review.");
+      return saveSuggestion(`sectionC.article${row}`, mapping.reference, `Rank ${rank}. ${relevance} Benchmark: ${benchmark}`,
+        { kind: "verified_article", row, documentId, scope: mapping.scope, referenceLevel: mapping.reference_level, rank, relevance, benchmark, citations: mapping.citations, mappingFingerprint: attributionFingerprint(mapping), mapping: { code: [mapping.title, mapping.edition, mapping.jurisdiction].filter(Boolean).join(" · "), objective: mapping.objective, function: mapping.function, intent: mapping.intent } });
+    },
+    async recommend_supporting_document(args) {
+      const row = rowNumber(args.row);
+      const title = text(args.title, 200);
+      const technicalIssues = text(args.technical_issues, 3000);
+      const codeReferences = text(args.code_references, 2000);
+      const professionalRole = text(args.professional_role, 500);
+      const engineeringRationale = text(args.engineering_rationale, 2000);
+      const source = text(args.source, 2000);
+      if (!["potential_engineering", "professional_review_needed", "not_assessed"].includes(String(args.engineering_assessment))) throw new Error("Invalid professional involvement assessment.");
+      return saveSuggestion(`sectionD.document${row}`, title, `${technicalIssues} Professional involvement: ${professionalRole}. ${engineeringRationale}`,
+        { kind: "supporting_document", row, technicalIssues, codeReferences, professionalRole, engineeringAssessment: args.engineering_assessment, engineeringRationale, source });
+    },
     async suggest_form_value(args) {
-      if (!isFormFieldKey(args.field_key)) throw new Error("Unsupported form field.");
+      if (!isFormFieldKey(args.field_key) || !AGENT_FIELD_KEYS.includes(args.field_key)) throw new Error("This field requires user entry or a verified attribution proposal.");
       const value = text(args.value, 5000);
-      const explanation = text(args.explanation, 5000);
-      signal?.throwIfAborted();
-      const client = await db.connect();
-      try {
-        await client.query("BEGIN");
-        // Serialize replacements for this application, including callers outside chat.
-        await client.query("SELECT id FROM applications WHERE id = $1 FOR UPDATE", [applicationId]);
-        await client.query(`UPDATE form_suggestions SET status = 'rejected'
-          WHERE application_id = $1 AND field_key = $2 AND status = 'pending'`, [applicationId, args.field_key]);
-        const result = await client.query(`INSERT INTO form_suggestions
-          (application_id, field_key, suggested_value, explanation) VALUES ($1, $2, $3, $4)
-          RETURNING id, field_key, suggested_value, explanation, status`, [applicationId, args.field_key, value, explanation]);
-        signal?.throwIfAborted();
-        await client.query("COMMIT");
-        return JSON.stringify(result.rows[0]);
-      } catch (error) {
-        await client.query("ROLLBACK");
-        throw error;
-      } finally { client.release(); }
+      validateFieldValue(args.field_key, value);
+      return saveSuggestion(args.field_key, value, text(args.explanation, 5000));
     },
   };
   return async (name: string, args: unknown): Promise<ToolOutput> => {

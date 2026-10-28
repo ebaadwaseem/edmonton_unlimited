@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { db } from "../backend/db.ts";
 
 // Existing baseline is adopted without recreating or resetting any tables.
-const files = ["schema.sql", "002_applications.sql", "003_application_documents.sql", "004_form_suggestions.sql", "005_runtime.sql"];
+const files = ["schema.sql", "002_applications.sql", "003_application_documents.sql", "004_form_suggestions.sql", "005_runtime.sql", "006_part_one.sql", "007_provision_attributions.sql", "008_review_workflow.sql", "009_demo_sessions.sql"];
 const client = await db.connect();
 try {
   await client.query("SELECT pg_advisory_lock(18452, 1)");

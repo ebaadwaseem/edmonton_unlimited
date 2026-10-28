@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { Request, Response } from "express";
 import { db } from "../db.ts";
 import { parseId } from "../http.ts";
 import multer from "multer";
@@ -40,18 +41,6 @@ router.post(
                 return;
             }
 
-            const application = await db.query(
-                `SELECT id FROM applications WHERE id = $1`,
-                [applicationId]
-            );
-
-            if (application.rows.length === 0) {
-                response.status(404).json({
-                    error: "Application not found.",
-                });
-                return;
-            }
-
             let pageCount: number;
             try {
                 pageCount = (await PDFDocument.load(file.buffer)).getPageCount();
@@ -62,7 +51,14 @@ router.post(
             }
             const filename = basename(file.originalname);
 
-            const result = await db.query(
+            const client = await db.connect();
+            try {
+            await client.query("BEGIN");
+            const application = await client.query("SELECT id FROM applications WHERE id=$1 FOR UPDATE", [applicationId]);
+            if (!application.rows.length) {
+                await client.query("ROLLBACK"); response.status(404).json({ error: "Application not found." }); return;
+            }
+            const result = await client.query(
                 `
     INSERT INTO application_documents (
       application_id,
@@ -76,7 +72,11 @@ router.post(
                 [applicationId, filename, file.buffer, pageCount]
             );
 
+            await client.query("UPDATE applications SET updated_at=NOW() WHERE id=$1", [applicationId]);
+            await client.query("COMMIT");
             response.status(201).json(result.rows[0]);
+            } catch (error) { await client.query("ROLLBACK"); throw error; }
+            finally { client.release(); }
         } catch (error) {
             console.error("Could not upload document:", error);
 
@@ -122,3 +122,28 @@ router.get(
     }
 );
 
+// Both IDs are required: a document cannot be read through another application's URL.
+// Demo ownership is enforced by application-level authorization middleware.
+export async function getApplicationDocument(request: Request, response: Response) {
+    const applicationId = parseId(request.params.id);
+    const documentId = parseId(request.params.documentId);
+    if (applicationId === null || documentId === null) {
+        response.status(400).json({ error: "Invalid application or document ID." });
+        return;
+    }
+    const result = await db.query(
+        `SELECT file_bytes FROM application_documents WHERE id = $1 AND application_id = $2`,
+        [documentId, applicationId]
+    );
+    if (!result.rows.length) {
+        response.status(404).json({ error: "Document not found in this application." });
+        return;
+    }
+    response.setHeader("Content-Type", "application/pdf");
+    response.setHeader("Content-Disposition", `inline; filename="document-${documentId}.pdf"`);
+    response.setHeader("Cache-Control", "private, no-store");
+    response.setHeader("X-Content-Type-Options", "nosniff");
+    response.send(result.rows[0].file_bytes);
+}
+
+router.get("/api/applications/:id/documents/:documentId/pdf", getApplicationDocument);

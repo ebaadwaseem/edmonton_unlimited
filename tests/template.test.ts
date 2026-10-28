@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { AnnotationFlags, PDFDocument, PDFName, degrees } from "pdf-lib";
-import { createPreview, getFormMarkers, loadFormMarkers, loadTemplateBytes } from "../backend/template.ts";
+import { createPreview, getFormMarkers, loadFormMarkers, loadTemplateBytes, loadPartOneTemplate } from "../backend/template.ts";
 import { FORM_FIELDS, FORM_FIELD_KEYS } from "../shared/form-fields.ts";
 
 test("filled previews preserve the source and persist field values and widget appearances", async () => {
@@ -14,9 +14,9 @@ test("filled previews preserve the source and persist field values and widget ap
     project: { municipalAddress: expected[3], permitNumber: expected[4] },
   });
   const pdf = await PDFDocument.load(output);
-  assert.equal(pdf.getPageCount(), 5);
+  assert.equal(pdf.getPageCount(), 2);
   const fields = pdf.getForm();
-  for (const [index, key] of FORM_FIELD_KEYS.entries()) {
+  for (const [index, key] of (["applicant.ownerName", "applicant.representative", "applicant.mailingAddress", "project.municipalAddress", "project.permitNumber"] as const).entries()) {
     const field = fields.getTextField(FORM_FIELDS[key].pdfField);
     assert.equal(field.getText(), expected[index]);
     for (const widget of field.acroField.getWidgets()) {
@@ -36,12 +36,12 @@ test("filled previews preserve the source and persist field values and widget ap
 });
 
 test("template markers match every supported widget on its actual page", async () => {
-  const pdf = await PDFDocument.load(await loadTemplateBytes());
+  const pdf = await loadPartOneTemplate();
   const markers = await loadFormMarkers();
   assert.equal(markers.length, FORM_FIELD_KEYS.length);
   for (const marker of markers) {
     const page = pdf.getPage(marker.page - 1);
-    const widget = pdf.getForm().getTextField(FORM_FIELDS[marker.key].pdfField).acroField.getWidgets()[0];
+    const widget = pdf.getForm().getField(FORM_FIELDS[marker.key].pdfField).acroField.getWidgets()[0];
     const rect = widget.getRectangle();
     assert.equal(page.ref.toString(), widget.P()?.toString());
     assert.ok(Math.abs(marker.left * page.getWidth() - rect.x) < 0.001);
