@@ -107,8 +107,10 @@ export default function VariancePreview({ url, width, markers = [], label = "PDF
         {editableForm && <div className="variance-pdf-edit-tools">
           {!editing ? <><span>Enter or correct your own information.</span><button type="button" className="variance-secondary" disabled={disabled || !pageCount || !editableForm.fields.length} onClick={() => { setEditing(true); setSaveError(""); }}>Edit fields</button></> : <>
             <span>{dirty ? "Unsaved changes" : "Editing supported fields"}</span>
-            <button type="button" disabled={disabled || !dirty} onClick={() => void saveChanges()}>{saving ? "Saving…" : "Save"}</button>
-            <button type="button" className="variance-secondary" disabled={disabled} onClick={() => { setChanges({}); setSaveError(""); setEditing(false); }}>Discard</button>
+            <div className="variance-pdf-edit-actions">
+              <button type="button" disabled={disabled || !dirty} onClick={() => void saveChanges()}>{saving ? "Saving…" : "Save"}</button>
+              <button type="button" className="variance-secondary" disabled={disabled} onClick={() => { setChanges({}); setSaveError(""); setEditing(false); }}>Discard</button>
+            </div>
           </>}
         </div>}
         {saveError && <p className="variance-pdf-save-error" role="alert">{saveError}</p>}

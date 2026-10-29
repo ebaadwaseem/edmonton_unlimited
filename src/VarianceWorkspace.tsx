@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import "./VarianceWorkspace.css";
 import PartOneForm from "./PartOneForm";
@@ -72,10 +72,29 @@ export default function VarianceWorkspace() {
     const [documentsOpen, setDocumentsOpen] = useState(false);
     const [activePanel, setActivePanel] = useState<Panel>("conversation");
     const chatRef = useRef<HTMLDivElement>(null);
+    const messageRef = useRef<HTMLTextAreaElement>(null);
     const followConversation = useRef(true);
     const busy = activity !== null;
     const applicationId = application?.id;
     const selectedDocument = documents.find((document) => document.id === selectedDocumentId);
+
+    useLayoutEffect(() => {
+        const textarea = messageRef.current;
+        if (!textarea) return;
+        const resize = () => {
+            textarea.style.height = "auto";
+            textarea.style.height = `${textarea.scrollHeight + 2}px`;
+        };
+        resize();
+        let previousWidth = textarea.clientWidth;
+        const observer = new ResizeObserver(() => {
+            if (textarea.clientWidth === previousWidth) return;
+            previousWidth = textarea.clientWidth;
+            resize();
+        });
+        observer.observe(textarea);
+        return () => observer.disconnect();
+    }, [message, activePanel, showSubmission]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -429,8 +448,8 @@ export default function VarianceWorkspace() {
                     </div>
                     <form onSubmit={sendMessage} className="variance-compose">
                         <label htmlFor="project-message">Message the assistant</label>
-                        <textarea id="project-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={application ? "Describe your project or ask a question…" : "Start an application to begin the conversation…"}
-                            rows={5} disabled={!application || busy} maxLength={5000} />
+                        <textarea ref={messageRef} id="project-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={application ? "Describe your project or ask a question…" : "Start an application to begin the conversation…"}
+                            rows={1} disabled={!application || busy} maxLength={5000} />
                         <div className="variance-compose-footer">
                             <button type="submit" disabled={!application || busy || !message.trim()}>{activity === "message" ? "Working…" : "Send"}<WorkspaceIcon name="send" /></button>
                         </div>

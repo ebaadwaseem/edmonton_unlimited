@@ -4,18 +4,18 @@ export function buildCompletenessFindings(snapshot: SubmissionSnapshot): Finding
   const findings: Finding[] = [];
   const filled = (v: unknown) => typeof v === "string" && Boolean(v.trim());
   const add = (key: string, section: string, title: string, status: Finding["status"], detail: string) => findings.push({ key, section, title, status, detail });
-  const field = (key: string, section: string, title: string, value: unknown, optional = false) => add(key, section, title, filled(value) ? "provided" : optional ? "not_applicable" : "missing", filled(value) ? "Applicant supplied a value; accuracy and technical suitability are not established." : optional ? "Optional for this demo's administrative checklist; omission is not a deficiency." : "No value supplied in the submitted snapshot.");
+  const field = (key: string, section: string, title: string, value: unknown, optional = false) => add(key, section, title, filled(value) ? "provided" : optional ? "not_applicable" : "missing", filled(value) ? "Applicant provided value. Check for accuracy." : optional ? "Value might not be applicable. Check for accuracy." : "Applicant did not provide a value.");
   field("A.owner", "A", "Owner / applicant name", form.applicant?.ownerName);
   field("A.address", "A", "Applicant mailing address", form.applicant?.mailingAddress);
   field("A.date", "A", "Request date", form.applicant?.requestDate);
   field("A.representative", "A", "Owner representative", form.applicant?.representative, true);
   field("B.jurisdiction", "B", "Jurisdiction", snapshot.application.jurisdiction);
-  if (form.project?.jurisdictionWide === true) add("B.address", "B", "Project location", "not_applicable", "Applicant indicates a jurisdiction-wide proposal. Reviewer must confirm that this scope is appropriate. This is separate from the SCC-submission checkbox.");
+  if (form.project?.jurisdictionWide === true) add("B.address", "B", "Project location", "not_applicable", "Applicant indicates a jurisdiction-wide proposal. Check for accuracy.");
   else field("B.address", "B", "Municipal project address", form.project?.municipalAddress);
   field("B.permit", "B", "Permit number (if applicable)", form.project?.permitNumber, true);
-  add("B.scc", "B", "SCC-submission declaration", "provided", form.project?.sccSubmitted === true ? "Applicant selected submitted to SCC for jurisdictional review. This is an applicant declaration, not confirmation of submission or acceptance." : "SCC-submission checkbox is not selected. This does not block internal administrative review.");
+  add("B.scc", "B", "SCC-submission declaration", "provided", form.project?.sccSubmitted === true ? "Applicant selected submit to SCC for jurisdictional review. Check for accuracy." : "SCC-submission checkbox is not selected.");
   const ats = ["lot", "block", "plan", "quarter", "section", "township", "range", "meridian"].filter((key) => filled(form.project?.[key]));
-  add("B.ats", "B", "ATS / legal location", ats.length ? "needs_clarification" : "not_applicable", ats.length ? "Legal location information is supplied. Confirm its applicable survey system and completeness; ATS is not inferred from the municipal address." : "No ATS values supplied; optional for this demo checklist when not applicable.");
+  add("B.ats", "B", "ATS / legal location", ats.length ? "needs_clarification" : "not_applicable", ats.length ? "Applicant provided ATS values. Check for accuracy." : "No ATS values supplied.");
   field("C.code", "C", "Applicable code and edition", form.sectionC?.code);
   let rows = 0;
   for (let row = 1; row <= 5; row++) {
@@ -34,13 +34,13 @@ export function buildCompletenessFindings(snapshot: SubmissionSnapshot): Finding
     if (!filled(title) && !filled(responsible) && !evidence) continue;
     documents++;
     const upload = snapshot.documents.find((document) => document.original_filename === title);
-    add(`D.${row}.document`, "D", `Row ${row}: supporting document`, upload ? "provided" : filled(title) ? "needs_clarification" : "missing", upload ? `An uploaded PDF has this exact filename (${upload.page_count} pages). A matching filename does not establish relevance, completeness, authorship or technical adequacy.` : evidence?.status === "recommended" ? `Recommended only: ${title || "untitled"}. No uploaded PDF is explicitly associated by exact filename. A recommendation is not a completed report.` : "Document described or responsible party supplied, but no uploaded PDF is associated by exact filename. Clarify whether the document has been provided.");
+    add(`D.${row}.document`, "D", `Row ${row}: supporting document`, upload ? "provided" : filled(title) ? "needs_clarification" : "missing", upload ? `An uploaded PDF has this exact filename (${upload.page_count} pages). A matching file name is not enough for completeness.` : evidence?.status === "recommended" ? `Recommended only: ${title || "untitled"}. No uploaded PDF is explicitly associated by exact filename. A recommendation is not a completed report.` : "Document described or responsible party supplied, but no uploaded PDF is associated by exact filename. Clarify whether the document has been provided.");
     add(`D.${row}.responsible`, "D", `Row ${row}: actual responsible person / organization`, filled(responsible) ? "provided" : "needs_clarification", filled(responsible) ? `Applicant-provided name: ${responsible}. Identity, licence and engagement are not verified.` : `No actual responsible party named.${evidence?.professionalRole ? ` Recommended role only: ${evidence.professionalRole}.` : ""} Confirm whether a named party is applicable; do not infer a name from a role recommendation.`);
     if (evidence) add(`D.${row}.screening`, "D", `Row ${row}: professional involvement screening`, !evidence.engineeringAssessment || evidence.engineeringAssessment === "not_assessed" ? "needs_clarification" : "provided", `${evidence.engineeringAssessment ?? "not_assessed"}: ${evidence.engineeringRationale ?? "Screening rationale not supplied."} Screening is not professional certification or technical compliance.`);
   }
-  if (!documents) add("D.scope", "D", "Supporting documentation scope", "needs_clarification", "No Section D documentation entries. Reviewer must determine what supporting information is appropriate to this proposal; the checklist cannot determine technical sufficiency.");
-  for (const document of snapshot.documents) add(`upload.${document.id}`, "D", `Uploaded: ${document.original_filename}`, "provided", `${document.page_count} physical PDF pages supplied. Presence does not establish technical sufficiency or fulfil a recommendation automatically.`);
+  if (!documents) add("D.scope", "D", "Supporting documentation scope", "needs_clarification", "Applicant did not write if any Section D supporting documents are supplied. Clarify whether any supporting documentation is provided.");
+  for (const document of snapshot.documents) add(`upload.${document.id}`, "D", `Uploaded: ${document.original_filename}`, "provided", "Section D supporting documents were uploaded. Check for accuracy.");
   const pending = snapshot.suggestions.filter((suggestion) => suggestion.status === "pending").length;
-  if (pending) add("suggestions.pending", "C", "Unaccepted suggestions", "unverified", `${pending} suggestions remain pending. They are preserved separately and have not been applied to the submitted form.`);
+  if (pending) add("suggestions.pending", "C", "Unaccepted suggestions", "unverified", `${pending} suggestions remain pending.`);
   return findings;
 }

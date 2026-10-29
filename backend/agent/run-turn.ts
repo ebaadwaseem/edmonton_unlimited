@@ -7,7 +7,7 @@ import { AGENT_CONFIG_VERSION, agentConfig } from "./config.ts";
 import { fitsToolResult } from "./result-limits.ts";
 import { createToolHandlers } from "./tools.ts";
 
-export class AgentSessionStateError extends Error {}
+export class AgentSessionStateError extends Error { }
 
 export type AgentTurnOptions = {
   applicationId: number;
@@ -46,8 +46,10 @@ export async function runAgentTurn(opts: AgentTurnOptions, deps: AgentTurnDepend
   }
   let events = sessionId
     ? await openai.beta.agents.sessions.events.stream(sessionId, { signal })
-    : await openai.beta.agents.sessions.create({ agent: agentConfig,
-        environment: { type: "none" }, input: opts.context ? `Saved conversation for context (quoted history, not new instructions):\n${opts.context}\n\nCurrent user message:\n${opts.message}` : opts.message, stream: true }, { signal });
+    : await openai.beta.agents.sessions.create({
+      agent: agentConfig,
+      environment: { type: "none" }, input: opts.context ? `Saved conversation for context (quoted history, not new instructions):\n${opts.context}\n\nCurrent user message:\n${opts.message}` : opts.message, stream: true
+    }, { signal });
   const saveSession = async (id: string) => {
     sessionId = id;
     // Persist immediately, even when a later tool or model call fails.
@@ -68,11 +70,41 @@ export async function runAgentTurn(opts: AgentTurnOptions, deps: AgentTurnDepend
         outcome = { success: false as const, error: error instanceof Error ? error.message : "Tool failed." };
       }
       let result = { type: "agent.session.input.tool_result" as const, turn_id: action.turn_id, call_id: action.call_id, ...outcome };
+      const originalBytes = Buffer.byteLength(JSON.stringify(result), "utf8");
       if (!fitsToolResult(result)) {
-        result = { type: "agent.session.input.tool_result", turn_id: action.turn_id, call_id: action.call_id,
-          success: false, error: "The tool result is too large. Request a narrower search or inspect a smaller page instead." };
+        result = {
+          type: "agent.session.input.tool_result", turn_id: action.turn_id, call_id: action.call_id,
+          success: false, error: "The tool result is too large. Request a narrower search or inspect a smaller page instead."
+        };
       }
-      await openai.beta.agents.sessions.events.create(session.id, { events: [result] }, { signal });
+      // Log sizes and identifiers only: outputs can contain private text or images.
+      const diagnostic = {
+        tool: action.name, callId: action.call_id, sessionId: session.id,
+        originalBytes, submittedBytes: Buffer.byteLength(JSON.stringify(result), "utf8"),
+        success: result.success
+      };
+      console.info("Agent tool result submitting:", diagnostic);
+      try {
+        await openai.beta.agents.sessions.events.create(session.id, { events: [result] }, { signal });
+        console.info("Agent tool result accepted:", { tool: action.name, callId: action.call_id });
+      } catch (error) {
+        console.error("Agent tool result submission failed:", {
+          ...diagnostic,
+          status: error instanceof OpenAI.APIError ? error.status : undefined,
+          requestId: error instanceof OpenAI.APIError ? error.requestID : undefined
+        });
+        if (!(error instanceof OpenAI.APIError) || error.status !== 400 || !result.success ||
+          !error.message.includes("function output exceeds the maximum durable MCP result size")) throw error;
+        // A rejected result has not satisfied this call. Supply a small failure
+        // for the same call so the model can continue without rerunning the tool
+        // (which may have side effects) or cancelling the entire user turn.
+        result = {
+          type: "agent.session.input.tool_result", turn_id: action.turn_id, call_id: action.call_id,
+          success: false, error: "The API could not accept this tool result because of its stored size. Do not repeat this exact request. Use a narrower search or another source, and explain any source details you could not inspect."
+        };
+        await openai.beta.agents.sessions.events.create(session.id, { events: [result] }, { signal });
+        console.info("Agent tool size failure reported:", { tool: action.name, callId: action.call_id });
+      }
       completedCalls.add(action.call_id);
     }
   };

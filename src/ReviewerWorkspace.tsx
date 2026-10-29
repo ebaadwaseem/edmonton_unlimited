@@ -83,16 +83,16 @@ export function SubmissionPanel({ submissionId, canReview = false, onChanged }: 
   const preview = documentId ? `/api/submissions/${submission.id}/documents/${documentId}/pdf` : `/api/submissions/${submission.id}/preview.pdf`;
   const outstanding = submission.findings.filter((finding) => finding.review_status !== "reviewed").length;
   return <div className="review-submission">
-    <div className="review-heading"><div><span className="review-eyebrow">Frozen submission · Revision {submission.revision}</span><h2>{submission.snapshot.application.title}</h2><p>{form.applicant?.ownerName || "Applicant not supplied"} · {submission.snapshot.application.jurisdiction || "Jurisdiction not supplied"} · Submitted {timestamp(submission.submitted_at)}</p></div><span className="review-badge">{workflowLabels[submission.status]}</span></div>
+    <div className="review-heading"><div><h2>{submission.snapshot.application.title}</h2><p>{form.applicant?.ownerName || "Applicant not supplied"} · {submission.snapshot.application.jurisdiction || "Jurisdiction not supplied"} · Submitted {timestamp(submission.submitted_at)}</p></div><span className="review-badge">{workflowLabels[submission.status]}</span></div>
     {submission.history && submission.history.length > 1 && <label>Submission history <select aria-label="Submission revision" value={activeId} disabled={busy} onChange={(event) => { if (event.target.value !== activeId) { setActiveId(event.target.value); setSubmission(null); setDocumentId(""); setError(""); setStatusNote(""); } }}>
       {submission.history.map((revision) => <option key={revision.id} value={revision.id}>Revision {revision.revision} · {workflowLabels[revision.status]} · {timestamp(revision.submitted_at)}</option>)}
     </select></label>}
-    <p className="review-notice">Administrative completeness and supporting-information review only. “Review complete” is an internal checklist state, not approval, refusal, technical certification, or a finding of code compliance. The submitted PDF and documents do not change when the working draft is edited.</p>
+    <p className="review-notice">Below is reviewer feedback for the submitted application. Submitted PDF does not change when the working draft is edited.</p>
     {!submission.is_latest && <p className="review-notice">Historical revision. Actions are available only on the latest open submission.</p>}
     {error && <p className="review-error" role="alert">{error}</p>}
     <div className="review-detail-grid"><div>
       <SubmittedSections submission={submission} />
-      <details className="review-section"><summary>Original reference PDFs frozen at submission</summary><p>Available reference material is not a declaration of applicability. National intent compatibility remains provision-specific and may be unverified. STANDATA and municipal guidance, when supplied, apply only within their stated scope and do not approve a project.</p>
+      <details className="review-section"><summary>PDFs supplied during submission</summary><p>Referenced material submitted with the application.</p>
         <ul className="review-reference-list">{submission.snapshot.references.map((source) => <FrozenReference key={source.id} submissionId={submission.id} source={source} />)}</ul>
       </details>
       {Boolean(submission.snapshot.referenceCandidates?.length) && <details className="review-section"><summary>Reference library candidates frozen at submission</summary><p>These library records are not accepted application attributions. They preserve exact provision scopes, source pages and existing review/compatibility statuses for inspection.</p>
@@ -105,7 +105,6 @@ export function SubmissionPanel({ submissionId, canReview = false, onChanged }: 
       <p className="review-small">{submission.snapshot.documents.length} uploaded PDFs. Recommendations in Section D are listed separately; they do not create uploaded reports.</p>
     </aside></div>
     <section className="review-findings"><div className="review-heading"><h3>Completeness findings</h3><span>{outstanding} of {submission.findings.length} await reviewer assessment</span></div>
-      <p className="review-small">Source status and reviewer assessment are separate. A reviewed “unverified” finding remains unverified.</p>
       <label htmlFor={`finding-filter-${submission.id}`}>Filter findings</label><select id={`finding-filter-${submission.id}`} value={filter} onChange={(event) => setFilter(event.target.value)}><option value="all">All findings</option><option value="unreviewed">Awaiting assessment</option>{Object.entries(findingLabels).map(([status,label]) => <option key={status} value={status}>{label}</option>)}</select>
       <div className="review-finding-grid">{submission.findings.filter((finding) => filter === "all" || filter === "unreviewed" ? filter === "all" || finding.review_status === "unreviewed" : finding.status === filter).map((finding) => <FindingCard key={finding.id} finding={finding} notes={submission.events.filter((event) => event.finding_id === finding.id)} actionable={actionable} busy={busy} onAction={(id,status,note) => action(`/api/reviewer/submissions/${submission.id}/findings/${id}`,{ reviewStatus: status,note })} />)}</div>
     </section>

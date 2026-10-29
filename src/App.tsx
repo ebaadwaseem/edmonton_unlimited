@@ -38,7 +38,7 @@ export default function App() {
     </div>
   </main>;
   return <div className="demo-shell">
-    <header className="demo-topbar"><div><strong>Building Codes Challenge</strong><span>{principal.role === "reviewer" ? "Safety Codes Officer / reviewer" : "Applicant workspace"} · Local demo</span></div><button type="button" onClick={() => void logout()}>Sign out / change role</button></header>
+    <header className="demo-topbar"><div><strong>Building Codes Challenge</strong></div><button type="button" onClick={() => void logout()}>Sign out / change role</button></header>
     {error && <p className="review-error" role="alert">{error}</p>}
     {principal.role === "reviewer" ? <ReviewerWorkspace key={principal.id} /> : <VarianceWorkspace key={principal.id} />}
   </div>;
