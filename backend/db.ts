@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { Pool } from "pg";
 
+// grab info from .env file
 const { DB_NAME, DB_USER, DB_PASSWORD } = process.env;
 if (!DB_NAME || !DB_USER || !DB_PASSWORD) {
   throw new Error("DB_NAME, DB_USER, and DB_PASSWORD must be set in .env.");
