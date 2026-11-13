@@ -10,7 +10,7 @@ async function main() {
 
   if (!pdfPath || pageArguments.length === 0) {
     console.error(
-      'Usage: npx tsx scripts/test-pdf-vision.ts "path/to/file.pdf" 10 11'
+      'Usage: npx tsx scripts/experiments/test-pdf-vision.ts "path/to/file.pdf" 10 11'
     );
     console.error(
       "Page numbers are the physical PDF pages shown by your PDF viewer."

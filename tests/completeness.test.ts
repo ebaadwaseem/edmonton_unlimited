@@ -35,7 +35,7 @@ test("recommended documents and professional roles are distinct from uploads and
   data.documents = [{ id: "upload",original_filename: "Fictional accessibility report",page_count: 1,uploaded_at: "2026-10-28",sha256: "fixture" }];
   findings = buildCompletenessFindings(data);
   assert.equal(findings.find((f) => f.key === "D.1.document")?.status,"provided");
-  assert.match(findings.find((f) => f.key === "D.1.document")!.detail,/does not establish relevance/);
+  assert.match(findings.find((f) => f.key === "D.1.document")!.detail,/matching file name is not enough for completeness/);
   assert.equal(findings.find((f) => f.key === "D.1.responsible")?.status,"needs_clarification");
   data.application.form_data.sectionD.responsible1 = "Fictional named applicant contact";
   assert.match(buildCompletenessFindings(data).find((f) => f.key === "D.1.responsible")!.detail,/licence and engagement are not verified/);

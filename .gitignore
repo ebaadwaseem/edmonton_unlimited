@@ -25,6 +25,13 @@ dist-ssr
 
 # Environment variables
 .env
+.env.*
+!.env.example
 
 # Docker Postgres Files
-database/postgres/*
+database/postgres/
+
+# Local database exports and persistence-test manifests
+*.dump
+*.backup
+variance-persistence*.json
